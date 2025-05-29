@@ -3,125 +3,39 @@
 <head>
   <title>BrowseHere Smart Search</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 1rem; user-select: none; }
+    body { font-family: sans-serif; text-align: center; padding: 1rem; }
     input, select, button { padding: 0.5rem; margin: 0.3rem; }
     iframe { width: 100%; height: 80vh; border: none; margin-top: 1rem; }
-    #status { margin-top: 1rem; font-weight: bold; color: green; }
   </style>
 </head>
 <body>
   <h2>BrowseHere</h2>
-
-  <!-- Search UI -->
   <input id="query" type="text" placeholder="Enter search..." />
   <select id="engine">
+
     <option value="https://www.bing.com/search?q=">Bing</option>
 
+
+    
   </select>
   <button onclick="search()">Search</button>
 
-  <!-- Display results -->
   <iframe id="browserFrame"></iframe>
 
-  <div id="status">Waiting for remote commands...</div>
+<script>
+  function search(query) {
+    const engine = document.getElementById('engine').value;
+    const fullUrl = engine + encodeURIComponent(query);
+    document.getElementById('browserFrame').src = fullUrl;
+  }
 
-  <script>
-    function search() {
-      const query = document.getElementById('query').value;
-      const engine = document.getElementById('engine').value;
-      const fullUrl = engine + encodeURIComponent(query);
-      document.getElementById('browserFrame').src = fullUrl;
+  // Listen to remote commands
+  window.addEventListener("message", (event) => {
+    if (event.data?.type === "search") {
+      document.getElementById("query").value = event.data.query;
+      search(event.data.query);
     }
-
-    window.addEventListener("message", (event) => {
-      const data = event.data;
-      if (!data || typeof data !== "object") return;
-
-      switch (data.type) {
-        case "search":
-          document.getElementById("query").value = data.query;
-          search();
-          updateStatus("Remote search: " + data.query);
-          break;
-
-        case "command":
-          handleRemoteCommand(data.action);
-          break;
-
-        case "keyboard":
-          updateStatus("Remote keyboard input: " + data.text);
-          break;
-      }
-    });
-
-    function handleRemoteCommand(action) {
-      updateStatus("Received: " + action);
-      switch (action) {
-        case "up":
-          window.scrollBy(0, -100);
-          break;
-        case "down":
-          window.scrollBy(0, 100);
-          break;
-        case "left":
-          window.scrollBy(-100, 0);
-          break;
-        case "right":
-          window.scrollBy(100, 0);
-          break;
-        case "ok":
-          alert("OK Pressed");
-          break;
-        case "vol_up":
-          document.getElementById("browserFrame").contentWindow.postMessage({ type: "volume", level: 1 }, "*");
-          break;
-        case "vol_down":
-          document.getElementById("browserFrame").contentWindow.postMessage({ type: "volume", level: -1 }, "*");
-          break;
-        case "power":
-          alert("Power Off (simulated)");
-          break;
-        case "back":
-          history.back();
-          break;
-        case "home":
-          location.reload();
-          break;
-        case "menu":
-          alert("Menu Pressed");
-          break;
-        default:
-          if (!isNaN(parseInt(action))) {
-            alert("Number " + action + " pressed");
-          }
-          break;
-      }
-    }
-
-    function updateStatus(text) {
-      document.getElementById("status").textContent = text;
-    }
-
-    // Touch gesture handling
-    let touchStartX = 0, touchStartY = 0;
-
-    document.addEventListener("touchstart", (e) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    });
-
-    document.addEventListener("touchend", (e) => {
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
-
-      if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 50) updateStatus("Swipe Right →"), window.scrollBy(100, 0);
-        else if (dx < -50) updateStatus("Swipe Left ←"), window.scrollBy(-100, 0);
-      } else {
-        if (dy > 50) updateStatus("Swipe Down ↓"), window.scrollBy(0, 100);
-        else if (dy < -50) updateStatus("Swipe Up ↑"), window.scrollBy(0, -100);
-      }
-    });
-  </script>
+  });
+</script>
 </body>
 </html>

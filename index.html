@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BrowseHere Smart Search</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 1rem; }
+    input, select, button { padding: 0.5rem; margin: 0.3rem; }
+    iframe { width: 100%; height: 80vh; border: none; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h2>BrowseHere</h2>
+  <input id="query" type="text" placeholder="Enter search..." />
+  <select id="engine">
+
+    <option value="https://www.bing.com/search?q=">Bing</option>
+
+
+    
+  </select>
+  <button onclick="search()">Search</button>
+
+  <iframe id="browserFrame"></iframe>
+
+<script>
+  function search(query) {
+    const engine = document.getElementById('engine').value;
+    const fullUrl = engine + encodeURIComponent(query);
+    document.getElementById('browserFrame').src = fullUrl;
+  }
+
+  // Listen to remote commands
+  window.addEventListener("message", (event) => {
+    if (event.data?.type === "search") {
+      document.getElementById("query").value = event.data.query;
+      search(event.data.query);
+    }
+  });
+</script>
+</body>
+</html>
